@@ -1,0 +1,142 @@
+
+> nexora@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.6:3000
+- Environments: .env
+✓ Ready in 879ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/apple/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/apple/Desktop/personal/nexora/package-lock.json
+
+
+file:///Users/apple/Desktop/personal/nexora/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+⨯ Error [PrismaClientInitializationError]: 
+Invalid `{imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].invoice.findMany()` invocation in
+/Users/apple/Desktop/personal/nexora/.next/dev/server/chunks/[root-of-the-server]__0nz0ktv._.js:143:195
+
+  140 const GET = (0, {imported module ./Desktop/personal/nexora/src/lib/auth-server.js}["requireAuth"])(async (request)=>{
+  141     const { searchParams } = new URL(request.url);
+  142     const status = searchParams.get('status');
+→ 143     const invoices = await {imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].invoice.findMany(
+Can't reach database server at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`
+
+Please make sure your database server is running at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`.
+    at <unknown> (src/app/api/accounting/invoices/route.js:9:41)
+    at async (src/app/api/accounting/invoices/route.js:9:20)
+   7 |   const status = searchParams.get('status');
+   8 |
+>  9 |   const invoices = await prisma.invoice.findMany({
+     |                                         ^
+  10 |     where: {
+  11 |       ...(status && { status }),
+  12 |     }, {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/accounting/invoices 500 in 617ms (next.js: 270ms, application-code: 346ms)
+file:///Users/apple/Desktop/personal/nexora/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+⨯ Error [PrismaClientInitializationError]: 
+Invalid `{imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].invoice.create()` invocation in
+/Users/apple/Desktop/personal/nexora/.next/dev/server/chunks/[root-of-the-server]__0nz0ktv._.js:165:194
+
+  162         status: 400
+  163     });
+  164 }
+→ 165 const invoice = await {imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].invoice.create(
+Can't reach database server at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`
+
+Please make sure your database server is running at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`.
+    at <unknown> (src/app/api/accounting/invoices/route.js:27:40)
+    at async (src/app/api/accounting/invoices/route.js:27:19)
+  25 |   }
+  26 |
+> 27 |   const invoice = await prisma.invoice.create({
+     |                                        ^
+  28 |     data: {
+  29 |       clientName,
+  30 |       amount: parseFloat(amount), {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ POST /api/accounting/invoices 500 in 157ms (next.js: 4ms, application-code: 153ms)
+file:///Users/apple/Desktop/personal/nexora/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+⨯ Error [PrismaClientInitializationError]: 
+Invalid `{imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].campaign.findMany()` invocation in
+/Users/apple/Desktop/personal/nexora/.next/dev/server/chunks/[root-of-the-server]__12dp8~7._.js:141:197
+
+  138 ;
+  139 ;
+  140 const GET = (0, {imported module ./Desktop/personal/nexora/src/lib/auth-server.js}["requireAuth"])(async (request)=>{
+→ 141     const campaigns = await {imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].campaign.findMany(
+Can't reach database server at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`
+
+Please make sure your database server is running at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`.
+    at <unknown> (src/app/api/marketing/campaigns/route.js:6:43)
+    at async (src/app/api/marketing/campaigns/route.js:6:21)
+  4 |
+  5 | export const GET = requireAuth(async (request) => {
+> 6 |   const campaigns = await prisma.campaign.findMany({
+    |                                           ^
+  7 |     orderBy: { createdAt: 'desc' },
+  8 |   });
+  9 |   return NextResponse.json(campaigns); {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/marketing/campaigns 500 in 171ms (next.js: 51ms, application-code: 119ms)
+file:///Users/apple/Desktop/personal/nexora/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+⨯ Error [PrismaClientInitializationError]: 
+Invalid `{imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].lead.create()` invocation in
+/Users/apple/Desktop/personal/nexora/.next/dev/server/chunks/[root-of-the-server]__0tqzj6k._.js:173:188
+
+  170         status: 400
+  171     });
+  172 }
+→ 173 const lead = await {imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].lead.create(
+Can't reach database server at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`
+
+Please make sure your database server is running at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`.
+    at <unknown> (src/app/api/marketing/leads/route.js:24:34)
+    at async (src/app/api/marketing/leads/route.js:24:16)
+  22 |   }
+  23 |
+> 24 |   const lead = await prisma.lead.create({
+     |                                  ^
+  25 |     data: {
+  26 |       name,
+  27 |       email, {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ POST /api/marketing/leads 500 in 171ms (next.js: 38ms, application-code: 133ms)
+file:///Users/apple/Desktop/personal/nexora/node_modules/@prisma/client/runtime/library.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: TypeError [ERR_INVALID_ARG_TYPE]: The "payload" argument must be of type object. Received null
+⨯ Error [PrismaClientInitializationError]: 
+Invalid `{imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].chartOfAccount.findMany()` invocation in
+/Users/apple/Desktop/personal/nexora/.next/dev/server/chunks/[root-of-the-server]__13x986f._.js:141:213
+
+  138 const GET = (0, {imported module ./Desktop/personal/nexora/src/lib/auth-server.js}["requireAuth"])(async (request, { params })=>{
+  139     const type = (await params).type;
+  140     if (type === 'pl') {
+→ 141         const revenueAccounts = await {imported module ./Desktop/personal/nexora/src/lib/db.js}["default"].chartOfAccount.findMany(
+Can't reach database server at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`
+
+Please make sure your database server is running at `db.flwxdtntlfmkjknvlmya.supabase.co:5432`.
+    at <unknown> (src/app/api/accounting/reports/[type]/route.js:9:57)
+    at async (src/app/api/accounting/reports/[type]/route.js:9:29)
+   7 | ...
+   8 | ...= 'pl') {
+>  9 | ...enueAccounts = await prisma.chartOfAccount.findMany({ where: { type: 'Revenue' }, inclu...
+     |                                               ^
+  10 | ...enseAccounts = await prisma.chartOfAccount.findMany({ where: { type: 'Expense' }, inclu...
+  11 | ...xtResponse.json({ reportType: 'Profit and Loss', data: { revenues: revenueAccounts, exp...
+  12 | ...type === 'balance-sheet') { {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/accounting/reports/pl 500 in 1035ms (next.js: 894ms, application-code: 141ms)

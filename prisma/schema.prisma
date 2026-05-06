@@ -1,0 +1,377 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── SHARED / SYSTEM ────────────────────────────────────────────────────────
+
+model Department {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  headUserId Int?
+  budget     Decimal? @db.Decimal(15, 2)
+  createdAt  DateTime @default(now())
+
+  employees   Employee[]
+  budgets     Budget[]
+  jobPostings JobPosting[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String
+  department   String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee           Employee?
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  qualityChecks      QualityCheck[]
+  journalEntries     JournalEntry[]
+  performanceReviews PerformanceReview[] @relation("Reviewer")
+  leaveApprovals     LeaveRequest[]      @relation("LeaveApprover")
+  assignedLeads      Lead[]
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String
+  tableName String
+  recordId  Int
+  oldData   Json?
+  newData   Json?
+  timestamp DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ─── MANUFACTURING ───────────────────────────────────────────────────────────
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  name         String
+  sku          String   @unique
+  category     String?
+  unitPrice    Decimal  @db.Decimal(10, 2)
+  currentStock Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bom              BillOfMaterial[]
+  productionOrders ProductionOrder[]
+}
+
+model RawMaterial {
+  id           Int      @id @default(autoincrement())
+  name         String
+  unit         String
+  stockQty     Decimal  @db.Decimal(10, 3)
+  reorderLevel Decimal  @db.Decimal(10, 3)
+  costPerUnit  Decimal  @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bom BillOfMaterial[]
+}
+
+model BillOfMaterial {
+  id               Int     @id @default(autoincrement())
+  productId        Int
+  materialId       Int
+  quantityRequired Decimal @db.Decimal(10, 3)
+
+  product  Product     @relation(fields: [productId], references: [id])
+  material RawMaterial @relation(fields: [materialId], references: [id])
+
+  @@unique([productId, materialId])
+}
+
+model WorkCentre {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  capacity    Int
+  currentLoad Int    @default(0)
+
+  productionOrders ProductionOrder[]
+}
+
+model ProductionOrder {
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  workCentreId Int?
+  quantity     Int
+  status       String    @default("Draft")
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  product       Product        @relation(fields: [productId], references: [id])
+  workCentre    WorkCentre?    @relation(fields: [workCentreId], references: [id])
+  qualityChecks QualityCheck[]
+}
+
+model QualityCheck {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  inspectorId Int
+  result      String
+  notes       String?
+  date        DateTime @default(now())
+
+  order     ProductionOrder @relation(fields: [orderId], references: [id])
+  inspector User            @relation(fields: [inspectorId], references: [id])
+}
+
+// ─── HUMAN RESOURCES ─────────────────────────────────────────────────────────
+
+model Employee {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  empNo        String   @unique
+  departmentId Int
+  position     String
+  hireDate     DateTime
+  salary       Decimal  @db.Decimal(10, 2)
+  status       String   @default("Active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id])
+
+  attendance         Attendance[]
+  leaveRequests      LeaveRequest[]
+  payrolls           Payroll[]
+  performanceReviews PerformanceReview[] @relation("Reviewee")
+}
+
+model Attendance {
+  id         Int       @id @default(autoincrement())
+  employeeId Int
+  date       DateTime  @db.Date
+  clockIn    DateTime?
+  clockOut   DateTime?
+  status     String    @default("Present")
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
+}
+
+model LeaveRequest {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  type       String
+  fromDate   DateTime @db.Date
+  toDate     DateTime @db.Date
+  status     String   @default("Pending")
+  approvedBy Int?
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  approver User?    @relation("LeaveApprover", fields: [approvedBy], references: [id])
+}
+
+model Payroll {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  month      Int
+  year       Int
+  baseSalary Decimal  @db.Decimal(10, 2)
+  deductions Decimal  @db.Decimal(10, 2) @default(0)
+  netPay     Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, month, year])
+}
+
+model JobPosting {
+  id           Int      @id @default(autoincrement())
+  title        String
+  departmentId Int
+  description  String?
+  status       String   @default("Open")
+  postedDate   DateTime @default(now())
+
+  department Department @relation(fields: [departmentId], references: [id])
+}
+
+model PerformanceReview {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  reviewerId Int
+  period     String
+  score      Int
+  comments   String?
+  createdAt  DateTime @default(now())
+
+  employee Employee @relation("Reviewee", fields: [employeeId], references: [id])
+  reviewer User     @relation("Reviewer", fields: [reviewerId], references: [id])
+}
+
+// ─── ACCOUNTING ──────────────────────────────────────────────────────────────
+
+model ChartOfAccount {
+  id   Int    @id @default(autoincrement())
+  code String @unique
+  name String
+  type String
+
+  journalLines JournalLine[]
+}
+
+model JournalEntry {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  reference   String?
+  description String?
+  createdBy   Int
+  createdAt   DateTime @default(now())
+
+  creator User          @relation(fields: [createdBy], references: [id])
+  lines   JournalLine[]
+}
+
+model JournalLine {
+  id        Int     @id @default(autoincrement())
+  journalId Int
+  accountId Int
+  debit     Decimal @db.Decimal(15, 2) @default(0)
+  credit    Decimal @db.Decimal(15, 2) @default(0)
+
+  journal JournalEntry   @relation(fields: [journalId], references: [id])
+  account ChartOfAccount @relation(fields: [accountId], references: [id])
+}
+
+model Invoice {
+  id         Int       @id @default(autoincrement())
+  clientName String
+  amount     Decimal   @db.Decimal(10, 2)
+  tax        Decimal   @db.Decimal(10, 2) @default(0)
+  status     String    @default("Draft")
+  dueDate    DateTime  @db.Date
+  paidDate   DateTime? @db.Date
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Bill {
+  id           Int      @id @default(autoincrement())
+  supplierName String
+  amount       Decimal  @db.Decimal(10, 2)
+  status       String   @default("Unpaid")
+  dueDate      DateTime @db.Date
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Budget {
+  id           Int     @id @default(autoincrement())
+  departmentId Int
+  fiscalYear   Int
+  allocated    Decimal @db.Decimal(15, 2)
+  spent        Decimal @db.Decimal(15, 2) @default(0)
+
+  department Department @relation(fields: [departmentId], references: [id])
+
+  @@unique([departmentId, fiscalYear])
+}
+
+model TaxRecord {
+  id     Int     @id @default(autoincrement())
+  type   String
+  amount Decimal @db.Decimal(10, 2)
+  period String
+  status String  @default("Pending")
+}
+
+// ─── MARKETING ───────────────────────────────────────────────────────────────
+
+model Campaign {
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String
+  status    String   @default("Planning")
+  budget    Decimal  @db.Decimal(10, 2)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  metrics         CampaignMetric[]
+  marketingBudget MarketingBudget?
+  leads           Lead[]
+}
+
+model Lead {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String?
+  phone      String?
+  source     String?
+  status     String   @default("New")
+  assignedTo Int?
+  campaignId Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  assignee User?     @relation(fields: [assignedTo], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
+  customer Customer?
+}
+
+model Customer {
+  id               Int     @id @default(autoincrement())
+  leadId           Int     @unique
+  name             String
+  company          String?
+  totalOrdersValue Decimal @db.Decimal(10, 2) @default(0)
+
+  lead Lead @relation(fields: [leadId], references: [id])
+}
+
+model CampaignMetric {
+  id          Int     @id @default(autoincrement())
+  campaignId  Int
+  impressions Int     @default(0)
+  clicks      Int     @default(0)
+  conversions Int     @default(0)
+  revenue     Decimal @db.Decimal(10, 2) @default(0)
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+}
+
+model MarketingBudget {
+  id         Int     @id @default(autoincrement())
+  campaignId Int     @unique
+  allocated  Decimal @db.Decimal(10, 2)
+  spent      Decimal @db.Decimal(10, 2) @default(0)
+  remaining  Decimal @db.Decimal(10, 2)
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+}
