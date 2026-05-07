@@ -6,31 +6,48 @@ import { Bell, ChevronDown, AlertCircle, Receipt, Package, FileText, LogOut, X }
 import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 
+const ROLE_NOTIFICATION_SOURCES = {
+  super_admin: ['accounting', 'manufacturing', 'hr'],
+  accountant: ['accounting'],
+  manufacturing_manager: ['manufacturing'],
+  manufacturing_staff: ['manufacturing'],
+  hr_manager: ['hr'],
+  hr_staff: ['hr'],
+  marketing_manager: [],
+  marketing_staff: [],
+  general_employee: [],
+};
+
+function getNotificationSources(role) {
+  return ROLE_NOTIFICATION_SOURCES[role] || [];
+}
+
 function getInitials(name = '') {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
 /* ── Notification panel ── */
-function NotificationPanel({ onClose }) {
+function NotificationPanel({ onClose, role }) {
   const [items, setItems]     = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const sources = getNotificationSources(role);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
         const [invoices, bills, materials, leaves] = await Promise.allSettled([
-          api.get('/accounting/invoices'),
-          api.get('/accounting/bills'),
-          api.get('/manufacturing/inventory'),
-          api.get('/hr/leave-requests'),
+          sources.includes('accounting') ? api.get('/accounting/invoices') : Promise.resolve([]),
+          sources.includes('accounting') ? api.get('/accounting/bills') : Promise.resolve([]),
+          sources.includes('manufacturing') ? api.get('/manufacturing/inventory') : Promise.resolve([]),
+          sources.includes('hr') ? api.get('/hr/leave-requests') : Promise.resolve([]),
         ]);
 
         const notifs = [];
 
         // Overdue invoices
-        if (invoices.status === 'fulfilled') {
+        if (invoices.status === 'fulfilled' && Array.isArray(invoices.value)) {
           invoices.value
             .filter(i => i.effectiveStatus === 'Overdue' || (i.status !== 'Paid' && new Date(i.dueDate) < new Date()))
             .forEach(i => notifs.push({
@@ -45,7 +62,7 @@ function NotificationPanel({ onClose }) {
         }
 
         // Overdue bills
-        if (bills.status === 'fulfilled') {
+        if (bills.status === 'fulfilled' && Array.isArray(bills.value)) {
           bills.value
             .filter(b => b.effectiveStatus === 'Overdue' || b.isOverdue)
             .forEach(b => notifs.push({
@@ -60,7 +77,7 @@ function NotificationPanel({ onClose }) {
         }
 
         // Low / out-of-stock materials
-        if (materials.status === 'fulfilled') {
+        if (materials.status === 'fulfilled' && Array.isArray(materials.value)) {
           materials.value
             .filter(m => m.stockStatus === 'out' || m.stockStatus === 'low')
             .slice(0, 4)
@@ -76,7 +93,7 @@ function NotificationPanel({ onClose }) {
         }
 
         // Pending leave requests
-        if (leaves.status === 'fulfilled') {
+        if (leaves.status === 'fulfilled' && Array.isArray(leaves.value)) {
           leaves.value
             .filter(l => l.status === 'Pending')
             .slice(0, 3)
@@ -99,7 +116,7 @@ function NotificationPanel({ onClose }) {
       }
     }
     load();
-  }, []);
+  }, [role]);
 
   function handleClick(href) {
     router.push(href);
@@ -189,6 +206,8 @@ function NotificationPanel({ onClose }) {
 /* ── Topbar ── */
 export default function Topbar({ title, subtitle }) {
   const { user, logout } = useAuth();
+  const role = user?.role;
+  const sources = getNotificationSources(role);
   const router = useRouter();
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -200,21 +219,21 @@ export default function Topbar({ title, subtitle }) {
     async function loadCount() {
       try {
         const [invoices, bills, materials, leaves] = await Promise.allSettled([
-          api.get('/accounting/invoices'),
-          api.get('/accounting/bills'),
-          api.get('/manufacturing/inventory'),
-          api.get('/hr/leave-requests'),
+          sources.includes('accounting') ? api.get('/accounting/invoices') : Promise.resolve([]),
+          sources.includes('accounting') ? api.get('/accounting/bills') : Promise.resolve([]),
+          sources.includes('manufacturing') ? api.get('/manufacturing/inventory') : Promise.resolve([]),
+          sources.includes('hr') ? api.get('/hr/leave-requests') : Promise.resolve([]),
         ]);
         let count = 0;
-        if (invoices.status === 'fulfilled') count += invoices.value.filter(i => i.effectiveStatus === 'Overdue' || (i.status !== 'Paid' && new Date(i.dueDate) < new Date())).length;
-        if (bills.status === 'fulfilled')    count += bills.value.filter(b => b.effectiveStatus === 'Overdue' || b.isOverdue).length;
-        if (materials.status === 'fulfilled') count += materials.value.filter(m => m.stockStatus === 'out' || m.stockStatus === 'low').slice(0, 4).length;
-        if (leaves.status === 'fulfilled')   count += leaves.value.filter(l => l.status === 'Pending').slice(0, 3).length;
+        if (invoices.status === 'fulfilled' && Array.isArray(invoices.value)) count += invoices.value.filter(i => i.effectiveStatus === 'Overdue' || (i.status !== 'Paid' && new Date(i.dueDate) < new Date())).length;
+        if (bills.status === 'fulfilled' && Array.isArray(bills.value))    count += bills.value.filter(b => b.effectiveStatus === 'Overdue' || b.isOverdue).length;
+        if (materials.status === 'fulfilled' && Array.isArray(materials.value)) count += materials.value.filter(m => m.stockStatus === 'out' || m.stockStatus === 'low').slice(0, 4).length;
+        if (leaves.status === 'fulfilled' && Array.isArray(leaves.value))   count += leaves.value.filter(l => l.status === 'Pending').slice(0, 3).length;
         setNotifCount(count);
       } catch { /* silent */ }
     }
     loadCount();
-  }, []);
+  }, [role]);
 
   function handleLogout() {
     logout();
@@ -253,7 +272,7 @@ export default function Topbar({ title, subtitle }) {
               </span>
             )}
           </button>
-          {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
+          {notifOpen && <NotificationPanel role={role} onClose={() => setNotifOpen(false)} />}
         </div>
 
         <div className="topbar-divider" />

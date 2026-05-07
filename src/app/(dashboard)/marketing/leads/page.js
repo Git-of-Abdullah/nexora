@@ -7,6 +7,7 @@ import Modal, { ConfirmModal } from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
 import api from '@/lib/api';
 import { Plus, Search, RefreshCw, Pencil, Trash2, UserPlus, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const PIPELINE_STAGES = ['New','Contacted','Qualified','Proposal Sent','Won','Lost'];
 const LEAD_SOURCES    = ['Website','Referral','Cold Call','Email','Social Media','Trade Show','Partner','Other'];
@@ -119,6 +120,21 @@ function KanbanCol({ stage, leads, onMove, onEdit }) {
 }
 
 export default function LeadsPage() {
+  const { user } = useAuth();
+  const isMarketingRole = ['super_admin','marketing_manager','marketing_staff'].includes(user?.role);
+  const canDelete = ['super_admin','marketing_manager'].includes(user?.role);
+  
+  // Redirect non-marketing users
+  useEffect(() => {
+    if (user && !isMarketingRole) {
+      window.location.href = '/dashboard';
+    }
+  }, [user, isMarketingRole]);
+  
+  if (!isMarketingRole) {
+    return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>Unauthorized access</div>;
+  }
+  
   const [leads,      setLeads]     = useState([]);
   const [campaigns,  setCampaigns] = useState([]);
   const [users,      setUsers]     = useState([]);
@@ -318,7 +334,7 @@ export default function LeadsPage() {
                       <td>
                         <div className="table-actions">
                           <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEdit(l)}><Pencil size={13} /></button>
-                          <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => setDelTarget(l)}><Trash2 size={13} /></button>
+                          {canDelete && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => setDelTarget(l)}><Trash2 size={13} /></button>}
                         </div>
                       </td>
                     </tr>

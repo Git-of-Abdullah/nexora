@@ -29,12 +29,12 @@ export const NAV_LINKS = [
   {
     label: 'Human Resources',
     href: '/hr',
-    roles: [ROLES.SUPER_ADMIN, ROLES.HR_MANAGER, ROLES.HR_STAFF, ROLES.GENERAL_EMPLOYEE],
+    roles: [ROLES.SUPER_ADMIN, ROLES.HR_MANAGER, ROLES.HR_STAFF, ROLES.GENERAL_EMPLOYEE, ROLES.ACCOUNTANT],
     children: [
-      { label: 'Employees', href: '/hr/employees' },
-      { label: 'Attendance', href: '/hr/attendance' },
-      { label: 'Leave Requests', href: '/hr/leave' },
-      { label: 'Payroll', href: '/hr/payroll' },
+      { label: 'Employees', href: '/hr/employees', roles: [ROLES.SUPER_ADMIN, ROLES.HR_MANAGER, ROLES.HR_STAFF, ROLES.GENERAL_EMPLOYEE] },
+      { label: 'Attendance', href: '/hr/attendance', roles: [ROLES.SUPER_ADMIN, ROLES.HR_MANAGER, ROLES.HR_STAFF, ROLES.GENERAL_EMPLOYEE] },
+      { label: 'Leave Requests', href: '/hr/leave', roles: [ROLES.SUPER_ADMIN, ROLES.HR_MANAGER, ROLES.HR_STAFF, ROLES.GENERAL_EMPLOYEE] },
+      { label: 'Payroll', href: '/hr/payroll', roles: [ROLES.SUPER_ADMIN, ROLES.HR_MANAGER, ROLES.GENERAL_EMPLOYEE, ROLES.ACCOUNTANT] },
     ],
   },
   {
