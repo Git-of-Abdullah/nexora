@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import Topbar from '@/components/layout/Topbar';
 import { KPICard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -17,6 +18,20 @@ const QUICK = [
 ];
 
 export default function MarketingPage() {
+  const { user } = useAuth();
+  const isMarketingRole = ['super_admin','marketing_manager','marketing_staff'].includes(user?.role);
+  
+  // Redirect non-marketing users
+  useEffect(() => {
+    if (user && !isMarketingRole) {
+      window.location.href = '/dashboard';
+    }
+  }, [user, isMarketingRole]);
+  
+  if (!isMarketingRole) {
+    return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>Unauthorized access</div>;
+  }
+  
   const [campaigns, setCampaigns] = useState([]);
   const [leads,     setLeads]     = useState([]);
   const [loading,   setLoading]   = useState(true);

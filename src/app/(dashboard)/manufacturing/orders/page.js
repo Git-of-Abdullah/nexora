@@ -6,7 +6,8 @@ import Badge from '@/components/ui/Badge';
 import Modal, { ConfirmModal } from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
 import api from '@/lib/api';
-import { Plus, Search, RefreshCw, Pencil, Trash2, Factory, ChevronRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Plus, Search, RefreshCw, Pencil, Trash2, Factory } from 'lucide-react';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return `${MONTHS[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`; }
@@ -16,6 +17,9 @@ const EMPTY_FORM = { productId: '', quantity: '', workCentreId: '', startDate: '
 const EDIT_STATUSES = STATUSES;
 
 export default function ProductionOrdersPage() {
+  const { user } = useAuth();
+  const canCreate = ['super_admin','manufacturing_manager'].includes(user?.role);
+  const canDelete = ['super_admin','manufacturing_manager'].includes(user?.role);
   const [orders,      setOrders]      = useState([]);
   const [products,    setProducts]    = useState([]);
   const [workCentres, setWorkCentres] = useState([]);
@@ -138,9 +142,9 @@ export default function ProductionOrdersPage() {
             <input className="form-input" placeholder="Search product, SKU…" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 32 }} />
           </div>
           <button className="btn btn-ghost btn-sm" onClick={load}><RefreshCw size={14} /></button>
-          <button className="btn btn-primary btn-sm" onClick={() => { setAddOpen(true); setForm(EMPTY_FORM); setFormError(''); }}>
+          {canCreate && <button className="btn btn-primary btn-sm" onClick={() => { setAddOpen(true); setForm(EMPTY_FORM); setFormError(''); }}>
             <Plus size={14} /> New Order
-          </button>
+          </button>}
         </div>
 
         {/* Table */}
@@ -194,7 +198,7 @@ export default function ProductionOrdersPage() {
                           className="btn btn-ghost btn-sm btn-icon" title="Update Status"
                           onClick={() => { setEditTarget(o); setEditStatus(o.status); setFormError(''); }}
                         ><Pencil size={13} /></button>
-                        {['Draft','Cancelled'].includes(o.status) && (
+                        {canDelete && ['Draft','Cancelled'].includes(o.status) && (
                           <button
                             className="btn btn-ghost btn-sm btn-icon" title="Delete"
                             style={{ color: 'var(--danger)' }}

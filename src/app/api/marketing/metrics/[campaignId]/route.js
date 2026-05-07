@@ -125,4 +125,4 @@ export const POST = requireAuth(async (request, { params }) => {
     },
     { status: 201 }
   );
-}, 'super_admin', 'marketing_manager');
+}, 'super_admin', 'marketing_manager', 'marketing_staff');

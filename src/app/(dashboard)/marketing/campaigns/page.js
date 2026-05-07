@@ -7,6 +7,7 @@ import Modal, { ConfirmModal } from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
 import api from '@/lib/api';
 import { Plus, Search, RefreshCw, Pencil, Trash2, Target, BarChart3, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function fmtDate(d)  { if (!d) return '—'; const dt = new Date(d); return `${MONTHS[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`; }
@@ -140,6 +141,21 @@ function MetricsPanel({ campaign, onClose }) {
 }
 
 export default function CampaignsPage() {
+  const { user } = useAuth();
+  const canManage = ['super_admin','marketing_manager'].includes(user?.role);
+  const isMarketingRole = ['super_admin','marketing_manager','marketing_staff'].includes(user?.role);
+  
+  // Redirect non-marketing users
+  useEffect(() => {
+    if (user && !isMarketingRole) {
+      window.location.href = '/dashboard';
+    }
+  }, [user, isMarketingRole]);
+  
+  if (!isMarketingRole) {
+    return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>Unauthorized access</div>;
+  }
+  
   const [campaigns,    setCampaigns]  = useState([]);
   const [loading,      setLoading]    = useState(true);
   const [search,       setSearch]     = useState('');
@@ -261,9 +277,9 @@ export default function CampaignsPage() {
             {CAMP_TYPES.map(t => <option key={t}>{t}</option>)}
           </select>
           <button className="btn btn-ghost btn-sm" onClick={load}><RefreshCw size={14} /></button>
-          <button className="btn btn-primary btn-sm" onClick={() => { setAddOpen(true); setForm(EMPTY_FORM); setFormError(''); }}>
+          {canManage && <button className="btn btn-primary btn-sm" onClick={() => { setAddOpen(true); setForm(EMPTY_FORM); setFormError(''); }}>
             <Plus size={14} /> New Campaign
-          </button>
+          </button>}
         </div>
 
         {/* Table */}
@@ -296,8 +312,8 @@ export default function CampaignsPage() {
                     <td>
                       <div className="table-actions">
                         <button className="btn btn-ghost btn-sm" title="View Metrics" onClick={() => setMetricsFor(c)}><BarChart3 size={13} /></button>
-                        <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEdit(c)}><Pencil size={13} /></button>
-                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => setDelTarget(c)}><Trash2 size={13} /></button>
+                        {canManage && <button className="btn btn-ghost btn-sm btn-icon" onClick={() => openEdit(c)}><Pencil size={13} /></button>}
+                        {canManage && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => setDelTarget(c)}><Trash2 size={13} /></button>}
                       </div>
                     </td>
                   </tr>

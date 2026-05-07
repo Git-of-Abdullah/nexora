@@ -23,6 +23,7 @@ function MaterialForm({ form, setForm, formError }) {
 import Modal, { ConfirmModal } from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
 import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { Plus, Search, RefreshCw, Pencil, Package, AlertTriangle } from 'lucide-react';
 
 function fmtQty(n) { return Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
@@ -56,6 +57,8 @@ function StockChip({ status }) {
 const EMPTY_ADD  = { name: '', unit: 'kg', stockQty: '', reorderLevel: '', costPerUnit: '' };
 
 export default function InventoryPage() {
+  const { user } = useAuth();
+  const canManage = ['super_admin','manufacturing_manager'].includes(user?.role);
   const [materials, setMaterials] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
@@ -162,9 +165,9 @@ export default function InventoryPage() {
             <option value="out">Out of Stock</option>
           </select>
           <button className="btn btn-ghost btn-sm" onClick={load}><RefreshCw size={14} /></button>
-          <button className="btn btn-primary btn-sm" onClick={() => { setAddOpen(true); setForm(EMPTY_ADD); setFormError(''); }}>
+          {canManage && <button className="btn btn-primary btn-sm" onClick={() => { setAddOpen(true); setForm(EMPTY_ADD); setFormError(''); }}>
             <Plus size={14} /> Add Material
-          </button>
+          </button>}
         </div>
 
         {/* Table */}
@@ -210,7 +213,7 @@ export default function InventoryPage() {
                     <td style={{ fontWeight: 600 }}>{fmtMoney(Number(m.stockQty) * Number(m.costPerUnit))}</td>
                     <td><StockChip status={m.stockStatus} /></td>
                     <td>
-                      <button className="btn btn-ghost btn-sm btn-icon" title="Edit" onClick={() => openEdit(m)}><Pencil size={13} /></button>
+                      {canManage && <button className="btn btn-ghost btn-sm btn-icon" title="Edit" onClick={() => openEdit(m)}><Pencil size={13} /></button>}
                     </td>
                   </tr>
                 ))}

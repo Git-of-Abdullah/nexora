@@ -116,9 +116,9 @@ export default function Sidebar() {
                 />
               </button>
 
-              {(isOpen || isActive) && (
+              {isOpen && (
                 <div className="nav-children">
-                  {link.children.map(child => {
+                  {link.children.filter(child => !child.roles || child.roles.includes(user?.role)).map(child => {
                     const ChildIcon = ICON_MAP[child.href];
                     return (
                       <Link
