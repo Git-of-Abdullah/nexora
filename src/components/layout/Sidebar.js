@@ -5,41 +5,98 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { NAV_LINKS } from '@/lib/constants';
+import {
+  LayoutDashboard, Factory, Users, BookOpen, Megaphone,
+  ChevronRight, Package, ClipboardCheck, UserCheck, Calendar,
+  FileText, Receipt, BarChart3, Target, UserPlus, LogOut,
+} from 'lucide-react';
+
+const ICON_MAP = {
+  '/dashboard':            LayoutDashboard,
+  '/manufacturing':        Factory,
+  '/manufacturing/orders': Package,
+  '/manufacturing/inventory': Package,
+  '/manufacturing/quality': ClipboardCheck,
+  '/hr':                   Users,
+  '/hr/employees':         UserCheck,
+  '/hr/attendance':        Calendar,
+  '/hr/leave':             Calendar,
+  '/hr/payroll':           FileText,
+  '/accounting':           BookOpen,
+  '/accounting/invoices':  Receipt,
+  '/accounting/bills':     Receipt,
+  '/accounting/reports':   BarChart3,
+  '/marketing':            Megaphone,
+  '/marketing/campaigns':  Target,
+  '/marketing/leads':      UserPlus,
+};
+
+function getInitials(name = '') {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
 
 export default function Sidebar() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
-  const [openSection, setOpenSection] = useState(null);
+  const [openSections, setOpenSections] = useState(() => {
+    // Pre-open the section that matches the current path
+    const initial = {};
+    NAV_LINKS.forEach(link => {
+      if (link.children && pathname.startsWith(link.href)) {
+        initial[link.href] = true;
+      }
+    });
+    return initial;
+  });
 
-  const visibleLinks = NAV_LINKS.filter((link) =>
-    link.roles.includes(user?.role)
-  );
+  const visibleLinks = NAV_LINKS.filter(link => link.roles.includes(user?.role));
+
+  function toggle(href) {
+    setOpenSections(prev => ({ ...prev, [href]: !prev[href] }));
+  }
 
   return (
-    <aside className="w-64 min-h-screen flex flex-col" style={{ backgroundColor: 'var(--primary)' }}>
+    <aside className="sidebar">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-white/10">
-        <h1 className="text-white text-xl font-bold tracking-wide">Nexora</h1>
-        <p className="text-white/50 text-xs mt-0.5">Smart ERP Solution</p>
+      <div className="sidebar-logo-area">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 8,
+            background: 'var(--accent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+          </div>
+          <div>
+            <div className="sidebar-logo-name">Nexora</div>
+            <div className="sidebar-logo-tag">Smart ERP Solution</div>
+          </div>
+        </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {visibleLinks.map((link) => {
+      {/* Navigation */}
+      <nav className="sidebar-nav">
+        <div className="sidebar-section-label">Main Menu</div>
+
+        {visibleLinks.map(link => {
+          const Icon = ICON_MAP[link.href] || LayoutDashboard;
           const isActive = pathname.startsWith(link.href);
-          const isOpen = openSection === link.href;
+          const isOpen = openSections[link.href];
 
           if (!link.children) {
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
+                className={`nav-item ${isActive ? 'active' : ''}`}
               >
+                <Icon className="nav-icon" size={16} />
                 {link.label}
               </Link>
             );
@@ -48,31 +105,31 @@ export default function Sidebar() {
           return (
             <div key={link.href}>
               <button
-                onClick={() => setOpenSection(isOpen ? null : link.href)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
+                onClick={() => toggle(link.href)}
+                className={`nav-item ${isActive ? 'active' : ''}`}
               >
-                {link.label}
-                <span className={`transition-transform text-xs ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+                <Icon className="nav-icon" size={16} />
+                <span style={{ flex: 1, textAlign: 'left' }}>{link.label}</span>
+                <ChevronRight
+                  className={`nav-chevron ${isOpen ? 'open' : ''}`}
+                  size={14}
+                />
               </button>
+
               {(isOpen || isActive) && (
-                <div className="mt-1 ml-3 space-y-1">
-                  {link.children.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                        pathname === child.href
-                          ? 'bg-white/20 text-white'
-                          : 'text-white/60 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
+                <div className="nav-children">
+                  {link.children.map(child => {
+                    const ChildIcon = ICON_MAP[child.href];
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={`nav-child ${pathname === child.href ? 'active' : ''}`}
+                      >
+                        {child.label}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -80,10 +137,30 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* User info at bottom */}
-      <div className="px-4 py-3 border-t border-white/10">
-        <p className="text-white text-sm font-medium truncate">{user?.name}</p>
-        <p className="text-white/50 text-xs capitalize">{user?.role?.replace(/_/g, ' ')}</p>
+      {/* Footer — user info */}
+      <div className="sidebar-footer">
+        <div className="sidebar-avatar">
+          {getInitials(user?.name)}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="sidebar-user-name truncate">{user?.name}</div>
+          <div className="sidebar-user-role truncate" style={{ textTransform: 'capitalize' }}>
+            {user?.role?.replace(/_/g, ' ')}
+          </div>
+        </div>
+        <button
+          onClick={() => { logout(); window.location.href = '/login'; }}
+          title="Logout"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)',
+            display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '6px',
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.9)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+        >
+          <LogOut size={15} />
+        </button>
       </div>
     </aside>
   );

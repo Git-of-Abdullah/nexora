@@ -1,22 +1,50 @@
-export default function Button({ children, variant = 'primary', size = 'md', className = '', ...props }) {
-  const base = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
+import { Loader2 } from 'lucide-react';
 
-  const variants = {
-    primary: 'bg-[#2E75B6] text-white hover:bg-[#245f94] focus:ring-[#2E75B6]',
-    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-300',
-    danger: 'bg-[#DC2626] text-white hover:bg-[#b91c1c] focus:ring-[#DC2626]',
-    ghost: 'text-gray-600 hover:bg-gray-100 focus:ring-gray-200',
-  };
-
-  const sizes = {
-    sm: 'px-3 py-1.5 text-xs',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-5 py-2.5 text-base',
-  };
+/**
+ * Button
+ * variants: primary | secondary | danger | ghost | success
+ * sizes:    sm | md | lg
+ */
+export default function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  icon: Icon,
+  iconRight: IconRight,
+  className = '',
+  ...props
+}) {
+  const cls = [
+    'btn',
+    `btn-${variant}`,
+    size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : '',
+    className,
+  ].filter(Boolean).join(' ');
 
   return (
-    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>
+    <button className={cls} disabled={loading || props.disabled} {...props}>
+      {loading
+        ? <Loader2 size={14} className="spinner-sm" style={{ animation: 'spin 0.6s linear infinite' }} />
+        : Icon && <Icon size={size === 'sm' ? 13 : 15} />
+      }
       {children}
+      {!loading && IconRight && <IconRight size={size === 'sm' ? 13 : 15} />}
+    </button>
+  );
+}
+
+export function IconButton({ icon: Icon, variant = 'ghost', size = 'md', title, className = '', ...props }) {
+  const cls = [
+    'btn btn-icon',
+    `btn-${variant}`,
+    size === 'sm' ? 'btn-sm' : '',
+    className,
+  ].filter(Boolean).join(' ');
+
+  return (
+    <button className={cls} title={title} {...props}>
+      <Icon size={15} />
     </button>
   );
 }
