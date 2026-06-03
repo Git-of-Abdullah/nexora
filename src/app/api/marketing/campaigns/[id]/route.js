@@ -6,6 +6,7 @@ const VALID_CAMPAIGN_STATUSES = new Set([
   'Planning',
   'Active',
   'Paused',
+  'Ended',
   'Completed',
   'Cancelled',
 ]);

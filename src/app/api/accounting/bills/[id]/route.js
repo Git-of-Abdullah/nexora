@@ -111,4 +111,4 @@ export const DELETE = requireAuth(async (request, { params }) => {
     }
     throw error;
   }
-}, 'super_admin', 'accounting_manager');
+}, 'super_admin', 'accounting_manager', 'accountant');

@@ -76,7 +76,8 @@ export default function PayrollPage(){
     setRunError('');setRunning(true);setRunResult(null);
     try{
       const result=await api.post('/hr/payroll/run',{
-        period:`${runYear}-${String(runMonth).padStart(2,'0')}`,
+        month:parseInt(runMonth,10),
+        year:parseInt(runYear,10),
         postToJournal:postJournal,
       });
       setRunResult(result);
